@@ -17,6 +17,15 @@
     li { padding: .6rem; border: 1px solid #ddd; border-radius: 6px; margin-bottom: .4rem;
          display: flex; justify-content: space-between; }
     .state { color: #888; font-size: .85rem; }
+    li.done { background: #f1f8f2; }
+    li.done .state { color: #1e7e34; }
+    .toggle-btn { padding: .3rem .8rem; cursor: pointer; border: 1px solid #ccc;
+                  border-radius: 4px; background: #fff; }
+    .toggle-btn.on { background: #1e7e34; color: #fff; border-color: #1e7e34; }
+    .ready { padding: 1rem; background: #e6f4ea; color: #1e7e34; border-radius: 8px;
+             font-weight: bold; text-align: center; font-size: 1.2rem; margin: 1rem 0; }
+    .remain { color: #b3261e; font-size: .9rem; margin: .5rem 0; }
+    .item-row { display: flex; justify-content: space-between; align-items: center; }
     a.back { display: inline-block; margin-bottom: 1rem; color: #1a73e8; text-decoration: none; }
   </style>
 </head>
@@ -36,9 +45,24 @@
   </form>
 
   {% if items %}
+    {% if all_done %}
+      <div class="ready">✅ 準備完了！</div>
+    {% else %}
+      <p class="remain">未チェックの持ち物が {{ unchecked_count }} 件あります</p>
+    {% endif %}
     <ul>
       {% for it in items %}
-        <li><span>{{ it['持ち物'] }}</span><span class="state">{{ it['チェック状態'] }}</span></li>
+        <li class="item-row {% if it['チェック状態'] == checked %}done{% endif %}">
+          <span>{{ it['持ち物'] }}<span class="state">（{{ it['チェック状態'] }}）</span></span>
+          <form action="{{ url_for('toggle_item', destination=destination) }}" method="post">
+            <input type="hidden" name="item" value="{{ it['持ち物'] }}">
+            {% if it['チェック状態'] == checked %}
+              <button type="submit" class="toggle-btn on">✓ 済</button>
+            {% else %}
+              <button type="submit" class="toggle-btn">チェックする</button>
+            {% endif %}
+          </form>
+        </li>
       {% endfor %}
     </ul>
   {% else %}

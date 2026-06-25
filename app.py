@@ -1,6 +1,7 @@
 """
 忘れ物確認Webアプリ
-今回実装: 外出先登録機能(No.1) + 持ち物登録機能(No.2) + 一覧表示(No.3) + CSV保存/読み込み(No.6,7)
+実装済: 外出先登録(No.1) + 持ち物登録(No.2) + 一覧表示(No.3) + CSV保存/読み込み(No.6,7)
+今回追加: チェック機能(No.4) + 準備完了表示(No.5)
 制約: Flask / CSV保存 / DBなし / ログインなし (要件定義 6章に準拠)
 """
 import csv
@@ -14,6 +15,7 @@ app.secret_key = "pbl-wasuremono-dev-key"  # flash表示用(開発用)
 CSV_PATH = os.path.join(os.path.dirname(__file__), "data.csv")
 HEADER = ["外出先", "持ち物", "チェック状態"]
 UNCHECKED = "未チェック"
+CHECKED = "チェック済み"
 
 
 # ---------- CSVStorage 相当 (クラス図 CSVStorage: load/save) ----------
@@ -90,7 +92,7 @@ def add_destination():
     return redirect(url_for("items", destination=name))
 
 
-# ---------- 機能No.2,3: 持ち物登録 + 一覧表示 ----------
+# ---------- 機能No.2,3,5: 持ち物登録 + 一覧表示 + 準備完了判定 ----------
 @app.route("/items/<destination>")
 def items(destination):
     if destination not in get_destinations():
@@ -98,7 +100,22 @@ def items(destination):
         return redirect(url_for("index"))
     # 目印行(持ち物が空)は表示しない
     item_rows = [r for r in get_items(destination) if r["持ち物"]]
-    return render_template("items.html", destination=destination, items=item_rows)
+
+    # 準備完了判定 (No.5 / ユースケース図 include:全項目チェック済みか判定)
+    # 持ち物が1件以上あり、かつ全てがチェック済みのとき準備完了
+    all_done = len(item_rows) > 0 and all(
+        r["チェック状態"] == CHECKED for r in item_rows
+    )
+    unchecked = [r for r in item_rows if r["チェック状態"] != CHECKED]
+
+    return render_template(
+        "items.html",
+        destination=destination,
+        items=item_rows,
+        checked=CHECKED,
+        all_done=all_done,
+        unchecked_count=len(unchecked),
+    )
 
 
 @app.route("/items/<destination>/add", methods=["POST"])
@@ -126,6 +143,32 @@ def add_item(destination):
     rows = [r for r in rows if not (r["外出先"] == destination and r["持ち物"] == "")]
     save_rows(rows)
     flash(f"「{item_name}」を登録しました", "success")
+    return redirect(url_for("items", destination=destination))
+
+
+# ---------- 機能No.4: チェック切替 (Item.check / uncheck) ----------
+@app.route("/items/<destination>/toggle", methods=["POST"])
+def toggle_item(destination):
+    item_name = (request.form.get("item") or "").strip()
+
+    if destination not in get_destinations():
+        flash("指定された外出先は存在しません", "error")
+        return redirect(url_for("index"))
+
+    rows = load_rows()
+    found = False
+    for r in rows:
+        if r["外出先"] == destination and r["持ち物"] == item_name:
+            # 状態遷移図: チェックを入れる / 外す の往復
+            r["チェック状態"] = UNCHECKED if r["チェック状態"] == CHECKED else CHECKED
+            found = True
+            break
+
+    if not found:
+        flash("対象の持ち物が見つかりません", "error")
+        return redirect(url_for("items", destination=destination))
+
+    save_rows(rows)  # チェック状態をCSVに保存 (受け入れ基準5)
     return redirect(url_for("items", destination=destination))
 
 
