@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>持ち物管理 - {{ destination }}</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { font-size: 1.4rem; }
+    .flash { padding: .6rem .8rem; border-radius: 6px; margin: .4rem 0; }
+    .flash.error { background: #fdecea; color: #b3261e; }
+    .flash.success { background: #e6f4ea; color: #1e7e34; }
+    form { display: flex; gap: .5rem; margin: 1rem 0; }
+    input[type=text] { flex: 1; padding: .5rem; }
+    button { padding: .5rem 1rem; cursor: pointer; }
+    ul { list-style: none; padding: 0; }
+    li { padding: .6rem; border: 1px solid #ddd; border-radius: 6px; margin-bottom: .4rem;
+         display: flex; justify-content: space-between; }
+    .state { color: #888; font-size: .85rem; }
+    a.back { display: inline-block; margin-bottom: 1rem; color: #1a73e8; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <a class="back" href="{{ url_for('index') }}">← 外出先一覧へ</a>
+  <h1>{{ destination }} の持ち物</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, msg in messages %}
+      <div class="flash {{ category }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <form action="{{ url_for('add_item', destination=destination) }}" method="post">
+    <input type="text" name="item" placeholder="持ち物(例:学生証、ノート)">
+    <button type="submit">追加</button>
+  </form>
+
+  {% if items %}
+    <ul>
+      {% for it in items %}
+        <li><span>{{ it['持ち物'] }}</span><span class="state">{{ it['チェック状態'] }}</span></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>まだ持ち物が登録されていません。</p>
+  {% endif %}
+</body>
+</html>

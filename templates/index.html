@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>忘れ物確認アプリ - トップ</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { font-size: 1.4rem; }
+    .flash { padding: .6rem .8rem; border-radius: 6px; margin: .4rem 0; }
+    .flash.error { background: #fdecea; color: #b3261e; }
+    .flash.success { background: #e6f4ea; color: #1e7e34; }
+    form { display: flex; gap: .5rem; margin: 1rem 0; }
+    input[type=text] { flex: 1; padding: .5rem; }
+    button { padding: .5rem 1rem; cursor: pointer; }
+    ul { list-style: none; padding: 0; }
+    li { padding: .6rem; border: 1px solid #ddd; border-radius: 6px; margin-bottom: .4rem; }
+    a { text-decoration: none; color: #1a73e8; }
+  </style>
+</head>
+<body>
+  <h1>外出先一覧</h1>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, msg in messages %}
+      <div class="flash {{ category }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <form action="{{ url_for('add_destination') }}" method="post">
+    <input type="text" name="destination" placeholder="外出先(例:学校、旅行)">
+    <button type="submit">登録</button>
+  </form>
+
+  {% if destinations %}
+    <ul>
+      {% for d in destinations %}
+        <li><a href="{{ url_for('items', destination=d) }}">{{ d }} →</a></li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>まだ外出先が登録されていません。</p>
+  {% endif %}
+</body>
+</html>
