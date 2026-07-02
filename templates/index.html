@@ -3,23 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>忘れ物確認アプリ - トップ</title>
-  <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
-    h1 { font-size: 1.4rem; }
-    .flash { padding: .6rem .8rem; border-radius: 6px; margin: .4rem 0; }
-    .flash.error { background: #fdecea; color: #b3261e; }
-    .flash.success { background: #e6f4ea; color: #1e7e34; }
-    form { display: flex; gap: .5rem; margin: 1rem 0; }
-    input[type=text] { flex: 1; padding: .5rem; }
-    button { padding: .5rem 1rem; cursor: pointer; }
-    ul { list-style: none; padding: 0; }
-    li { padding: .6rem; border: 1px solid #ddd; border-radius: 6px; margin-bottom: .4rem; }
-    a { text-decoration: none; color: #1a73e8; }
-  </style>
+  <title>忘れ物確認アプリ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <h1>外出先一覧</h1>
+  <header class="app-header">
+    <span class="mark">🎒</span>
+    <h1>忘れ物確認アプリ</h1>
+    <p class="sub">出かける前に、荷札をチェック。</p>
+    <p class="clock">{{ now_text }} <span id="clock-time"></span></p>
+  </header>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% for category, msg in messages %}
@@ -27,19 +22,46 @@
     {% endfor %}
   {% endwith %}
 
-  <form action="{{ url_for('add_destination') }}" method="post">
-    <input type="text" name="destination" placeholder="外出先(例:学校、旅行)">
+  <form class="add-form add-form-dest" action="{{ url_for('add_destination') }}" method="post">
+    <input type="text" name="destination" placeholder="外出先を追加（例：学校、旅行）">
+    <input type="date" name="date" title="予定日（任意）">
     <button type="submit">登録</button>
   </form>
 
   {% if destinations %}
-    <ul>
+    <ul class="tag-list">
       {% for d in destinations %}
-        <li><a href="{{ url_for('items', destination=d) }}">{{ d }} →</a></li>
+        <li class="tag {% if d.is_today %}today{% endif %}">
+          <a href="{{ url_for('items', destination=d.name) }}">
+            {% if d.is_today %}<span class="badge-today">📍 今日の予定</span>{% endif %}
+            {{ d.name }}
+            <span class="meta">
+              {% if d.total > 0 %}持ち物 {{ d.done }}/{{ d.total }} 件{% else %}持ち物は未登録{% endif %}
+              {% if d.date %}｜{{ d.date }}（{{ d.date_label }}）{% endif %}
+            </span>
+          </a>
+          {% if d.ready %}<span class="badge-ready">準備OK</span>{% endif %}
+          <form action="{{ url_for('delete_destination', destination=d.name) }}" method="post"
+                onsubmit="return confirm('外出先「{{ d.name }}」を持ち物ごと削除しますか？');">
+            <button type="submit" class="del-btn">削除</button>
+          </form>
+        </li>
       {% endfor %}
     </ul>
   {% else %}
-    <p>まだ外出先が登録されていません。</p>
+    <p class="empty">まだ外出先がありません。<br>上の欄から最初の行き先を登録しましょう。</p>
   {% endif %}
+
+  <script>
+    // 現在時刻を1秒ごとに更新
+    function tick() {
+      var n = new Date();
+      var p = function (x) { return String(x).padStart(2, "0"); };
+      document.getElementById("clock-time").textContent =
+        p(n.getHours()) + ":" + p(n.getMinutes()) + ":" + p(n.getSeconds());
+    }
+    tick();
+    setInterval(tick, 1000);
+  </script>
 </body>
 </html>

@@ -1,0 +1,237 @@
+/* =====================================================
+   忘れ物確認Webアプリ 共通デザイン (機能No.13)
+   コンセプト: 「朝、玄関を出る前」 / 荷札(ラゲッジタグ)モチーフ
+   ===================================================== */
+
+:root {
+  --bg: #eef4f7;          /* 朝の空 */
+  --card: #ffffff;
+  --ink: #243239;         /* 墨色の文字 */
+  --muted: #66808c;
+  --primary: #2e7d9a;     /* 深いティール */
+  --primary-soft: #dcecf2;
+  --ok: #2e8b57;          /* チェック済みの緑 */
+  --ok-soft: #e9f5ee;
+  --warn: #c4553b;        /* 未チェックの赤茶 */
+  --warn-soft: #fbeeea;
+  --line: #d7e3e9;
+  --radius: 14px;
+  --shadow: 0 2px 10px rgba(36, 50, 57, .08);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font-family: "Zen Maru Gothic", "Hiragino Maru Gothic ProN",
+               "Yu Gothic", "Meiryo", sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 4rem;
+  line-height: 1.6;
+}
+
+/* ---------- 見出し ---------- */
+.app-header { text-align: center; margin-bottom: 1.5rem; }
+.app-header .mark { font-size: 2rem; display: block; }
+h1 { font-size: 1.35rem; font-weight: 700; margin: .2rem 0 0; letter-spacing: .05em; }
+.app-header .sub { color: var(--muted); font-size: .85rem; margin: .2rem 0 0; }
+.app-header .clock {
+  margin: .4rem 0 0; font-size: .88rem; color: var(--primary); font-weight: 700;
+  letter-spacing: .04em;
+}
+.app-header .clock #clock-time { font-variant-numeric: tabular-nums; }
+
+/* ---------- 予定日 ---------- */
+input[type=date] {
+  padding: .5rem .6rem; font-family: inherit; font-size: .9rem;
+  border: 1.5px solid var(--line); border-radius: 10px; background: var(--card);
+  color: var(--ink);
+}
+input[type=date]:focus { outline: 2px solid var(--primary); outline-offset: 1px; }
+.add-form-dest input[type=date] { flex: 0 0 auto; }
+
+.date-form {
+  display: flex; gap: .45rem; justify-content: center; align-items: center;
+  margin-top: .5rem; flex-wrap: wrap;
+}
+.plan-text { font-size: .85rem; color: var(--muted); }
+.mini-btn {
+  padding: .45rem .8rem; font-family: inherit; font-size: .85rem; font-weight: 700;
+  background: var(--primary); color: #fff; border: none; border-radius: 999px; cursor: pointer;
+}
+.mini-btn:hover { filter: brightness(1.08); }
+
+.badge-today {
+  display: inline-block; font-size: .75rem; font-weight: 700;
+  color: #fff; background: var(--warn);
+  padding: .18rem .6rem; border-radius: 999px; margin-bottom: .15rem;
+}
+.tag.today {
+  border-color: var(--warn); border-width: 2px;
+  background: #fff8f5;
+  box-shadow: 0 3px 14px rgba(196, 85, 59, .18);
+}
+.tag.today .badge-today { display: block; width: fit-content; }
+
+/* ---------- 通知 ---------- */
+.flash { padding: .7rem 1rem; border-radius: 10px; margin: .4rem 0; font-size: .92rem; }
+.flash.error   { background: var(--warn-soft); color: var(--warn); }
+.flash.success { background: var(--ok-soft);   color: var(--ok); }
+
+/* ---------- 入力フォーム ---------- */
+.add-form { display: flex; gap: .5rem; margin: 1rem 0 1.4rem; }
+.add-form input[type=text] {
+  flex: 1; padding: .7rem .9rem; font-size: 1rem;
+  border: 1.5px solid var(--line); border-radius: 10px; background: var(--card);
+  font-family: inherit;
+}
+.add-form input[type=text]:focus {
+  outline: 2px solid var(--primary); outline-offset: 1px; border-color: var(--primary);
+}
+.add-form button {
+  padding: .7rem 1.3rem; font-size: 1rem; font-family: inherit; font-weight: 700;
+  background: var(--primary); color: #fff; border: none; border-radius: 10px; cursor: pointer;
+}
+.add-form button:hover { filter: brightness(1.08); }
+
+/* ---------- 荷札カード (外出先) : シグネチャー要素 ---------- */
+.tag-list { list-style: none; padding: 0; margin: 0; display: grid; gap: .7rem; }
+.tag {
+  position: relative;
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: .9rem 1rem .9rem 2.4rem;
+  display: flex; justify-content: space-between; align-items: center; gap: .6rem;
+  clip-path: polygon(14px 0, 100% 0, 100% 100%, 14px 100%, 0 50%); /* 荷札の先端 */
+}
+.tag::before { /* 荷札の紐穴 */
+  content: ""; position: absolute; left: 1.05rem; top: 50%;
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--bg); border: 2px solid var(--line);
+  transform: translateY(-50%);
+}
+.tag a {
+  color: var(--ink); text-decoration: none; font-weight: 700; font-size: 1.05rem;
+  flex: 1;
+}
+.tag a:hover { color: var(--primary); }
+.tag .meta { font-size: .78rem; color: var(--muted); display: block; font-weight: 400; }
+.tag .badge-ready {
+  font-size: .75rem; color: var(--ok); background: var(--ok-soft);
+  padding: .15rem .5rem; border-radius: 999px; white-space: nowrap;
+}
+
+/* ---------- 持ち物リスト ---------- */
+.item-list { list-style: none; padding: 0; margin: 0; display: grid; gap: .55rem; }
+.item-row {
+  background: var(--card); border: 1.5px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: .7rem .9rem;
+  display: flex; justify-content: space-between; align-items: center; gap: .6rem;
+  transition: transform .12s ease;
+}
+.item-row.done   { border-color: var(--ok);   background: var(--ok-soft); }
+.item-row.notyet { border-color: #ecc9bf; }
+.item-name { font-weight: 700; }
+.state { color: var(--muted); font-size: .78rem; font-weight: 400; margin-left: .3rem; }
+.item-row.done .state { color: var(--ok); }
+
+.btn-group { display: flex; gap: .4rem; align-items: center; }
+.btn-group form { margin: 0; }
+
+.toggle-btn {
+  padding: .45rem .9rem; cursor: pointer; font-family: inherit; font-size: .88rem;
+  border: 1.5px solid var(--primary); border-radius: 999px;
+  background: var(--card); color: var(--primary); font-weight: 700;
+}
+.toggle-btn:hover { background: var(--primary-soft); }
+.toggle-btn.on { background: var(--ok); border-color: var(--ok); color: #fff; }
+
+.del-btn {
+  padding: .45rem .7rem; cursor: pointer; font-family: inherit; font-size: .82rem;
+  border: 1.5px solid #e3b7ab; border-radius: 999px; background: var(--card); color: var(--warn);
+}
+.del-btn:hover { background: var(--warn-soft); }
+
+.reset-btn {
+  margin-top: 1rem; padding: .55rem 1.1rem; cursor: pointer;
+  font-family: inherit; font-size: .9rem;
+  border: 1.5px solid var(--line); border-radius: 999px;
+  background: var(--card); color: var(--muted);
+}
+.reset-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+/* ---------- 進捗バー ---------- */
+.progress-wrap { margin: 0 0 1rem; }
+.progress-label {
+  display: flex; justify-content: space-between;
+  font-size: .82rem; color: var(--muted); margin-bottom: .3rem;
+}
+.progress-label b { color: var(--ink); }
+.progress-track {
+  height: 12px; background: var(--primary-soft); border-radius: 999px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; background: linear-gradient(90deg, var(--primary), var(--ok));
+  border-radius: 999px; transition: width .4s ease;
+}
+
+/* ---------- 準備完了 / 未チェック警告 ---------- */
+.ready {
+  padding: 1.1rem; border-radius: var(--radius); text-align: center;
+  background: var(--ok-soft); color: var(--ok);
+  font-weight: 700; font-size: 1.25rem; margin: 0 0 1rem;
+  border: 1.5px solid var(--ok);
+  animation: pop .45s ease;
+}
+.remain-list {
+  background: var(--warn-soft); border: 1.5px solid #ecc9bf;
+  padding: .7rem .9rem; border-radius: 10px;
+  color: var(--warn); font-size: .9rem; margin: 0 0 1rem;
+}
+
+@keyframes pop {
+  0% { transform: scale(.92); opacity: 0; }
+  70% { transform: scale(1.03); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ---------- 紙吹雪 ---------- */
+.confetti {
+  position: fixed; top: -12px; width: 9px; height: 14px;
+  border-radius: 2px; opacity: .9; pointer-events: none; z-index: 999;
+  animation: fall linear forwards;
+}
+@keyframes fall {
+  to { transform: translateY(105vh) rotate(720deg); opacity: .6; }
+}
+
+/* 動きを減らす設定の人にはアニメーションを止める */
+@media (prefers-reduced-motion: reduce) {
+  .ready { animation: none; }
+  .confetti { display: none; }
+  .progress-fill { transition: none; }
+}
+
+/* ---------- その他 ---------- */
+a.back {
+  display: inline-block; margin-bottom: .8rem;
+  color: var(--primary); text-decoration: none; font-size: .9rem; font-weight: 700;
+}
+.empty {
+  text-align: center; color: var(--muted); padding: 2rem 1rem;
+  background: var(--card); border: 1.5px dashed var(--line); border-radius: var(--radius);
+}
+
+/* ---------- スマホ対応 ---------- */
+@media (max-width: 480px) {
+  body { padding: 1rem .8rem 3rem; }
+  .item-row { flex-wrap: wrap; }
+  .btn-group { width: 100%; justify-content: flex-end; }
+  .add-form-dest { flex-wrap: wrap; }
+  .add-form-dest input[type=text] { flex: 1 1 100%; }
+}

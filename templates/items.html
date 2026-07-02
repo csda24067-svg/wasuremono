@@ -3,35 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>持ち物管理 - {{ destination }}</title>
-  <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 2rem auto; padding: 0 1rem; }
-    h1 { font-size: 1.4rem; }
-    .flash { padding: .6rem .8rem; border-radius: 6px; margin: .4rem 0; }
-    .flash.error { background: #fdecea; color: #b3261e; }
-    .flash.success { background: #e6f4ea; color: #1e7e34; }
-    form { display: flex; gap: .5rem; margin: 1rem 0; }
-    input[type=text] { flex: 1; padding: .5rem; }
-    button { padding: .5rem 1rem; cursor: pointer; }
-    ul { list-style: none; padding: 0; }
-    li { padding: .6rem; border: 1px solid #ddd; border-radius: 6px; margin-bottom: .4rem;
-         display: flex; justify-content: space-between; }
-    .state { color: #888; font-size: .85rem; }
-    li.done { background: #f1f8f2; }
-    li.done .state { color: #1e7e34; }
-    .toggle-btn { padding: .3rem .8rem; cursor: pointer; border: 1px solid #ccc;
-                  border-radius: 4px; background: #fff; }
-    .toggle-btn.on { background: #1e7e34; color: #fff; border-color: #1e7e34; }
-    .ready { padding: 1rem; background: #e6f4ea; color: #1e7e34; border-radius: 8px;
-             font-weight: bold; text-align: center; font-size: 1.2rem; margin: 1rem 0; }
-    .remain { color: #b3261e; font-size: .9rem; margin: .5rem 0; }
-    .item-row { display: flex; justify-content: space-between; align-items: center; }
-    a.back { display: inline-block; margin-bottom: 1rem; color: #1a73e8; text-decoration: none; }
-  </style>
+  <title>{{ destination }} の持ち物 - 忘れ物確認アプリ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <a class="back" href="{{ url_for('index') }}">← 外出先一覧へ</a>
-  <h1>{{ destination }} の持ち物</h1>
+
+  <header class="app-header">
+    <span class="mark">🧳</span>
+    <h1>{{ destination }} の持ち物</h1>
+    <form class="date-form" action="{{ url_for('set_date', destination=destination) }}" method="post">
+      {% if is_today %}
+        <span class="badge-today">📍 今日の予定</span>
+      {% elif plan_date %}
+        <span class="plan-text">予定日：{{ plan_date }}（{{ plan_label }}）</span>
+      {% else %}
+        <span class="plan-text">予定日は未設定</span>
+      {% endif %}
+      <input type="date" name="date" value="{{ plan_date }}">
+      <button type="submit" class="mini-btn">設定</button>
+    </form>
+  </header>
 
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% for category, msg in messages %}
@@ -39,34 +33,78 @@
     {% endfor %}
   {% endwith %}
 
-  <form action="{{ url_for('add_item', destination=destination) }}" method="post">
-    <input type="text" name="item" placeholder="持ち物(例:学生証、ノート)">
+  <form class="add-form" action="{{ url_for('add_item', destination=destination) }}" method="post">
+    <input type="text" name="item" placeholder="持ち物を追加（例：学生証、ノート）">
     <button type="submit">追加</button>
   </form>
 
   {% if items %}
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>準備の進み具合</span>
+        <span><b>{{ done_count }}</b> / {{ total_count }} 件</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" style="width: {{ (done_count * 100 / total_count) | round }}%;"></div>
+      </div>
+    </div>
+
     {% if all_done %}
-      <div class="ready">✅ 準備完了！</div>
+      <div class="ready">✅ 準備完了！いってらっしゃい</div>
     {% else %}
-      <p class="remain">未チェックの持ち物が {{ unchecked_count }} 件あります</p>
+      <div class="remain-list">
+        ⚠ 未チェック {{ unchecked_count }} 件：{{ unchecked_names | join('、') }}
+      </div>
     {% endif %}
-    <ul>
+
+    <ul class="item-list">
       {% for it in items %}
-        <li class="item-row {% if it['チェック状態'] == checked %}done{% endif %}">
-          <span>{{ it['持ち物'] }}<span class="state">（{{ it['チェック状態'] }}）</span></span>
-          <form action="{{ url_for('toggle_item', destination=destination) }}" method="post">
-            <input type="hidden" name="item" value="{{ it['持ち物'] }}">
-            {% if it['チェック状態'] == checked %}
-              <button type="submit" class="toggle-btn on">✓ 済</button>
-            {% else %}
-              <button type="submit" class="toggle-btn">チェックする</button>
-            {% endif %}
-          </form>
+        <li class="item-row {% if it['チェック状態'] == checked %}done{% else %}notyet{% endif %}">
+          <span class="item-name">{{ it['持ち物'] }}<span class="state">{{ it['チェック状態'] }}</span></span>
+          <span class="btn-group">
+            <form action="{{ url_for('toggle_item', destination=destination) }}" method="post">
+              <input type="hidden" name="item" value="{{ it['持ち物'] }}">
+              {% if it['チェック状態'] == checked %}
+                <button type="submit" class="toggle-btn on">✓ 済</button>
+              {% else %}
+                <button type="submit" class="toggle-btn">チェックする</button>
+              {% endif %}
+            </form>
+            <form action="{{ url_for('delete_item', destination=destination) }}" method="post"
+                  onsubmit="return confirm('「{{ it['持ち物'] }}」を削除しますか？');">
+              <input type="hidden" name="item" value="{{ it['持ち物'] }}">
+              <button type="submit" class="del-btn">削除</button>
+            </form>
+          </span>
         </li>
       {% endfor %}
     </ul>
+
+    <form action="{{ url_for('reset_checks', destination=destination) }}" method="post"
+          onsubmit="return confirm('すべてのチェックを外しますか？（次回利用のためのリセット）');">
+      <button type="submit" class="reset-btn">🔄 チェックをリセット</button>
+    </form>
   {% else %}
-    <p>まだ持ち物が登録されていません。</p>
+    <p class="empty">まだ持ち物がありません。<br>上の欄から必要なものを追加しましょう。</p>
+  {% endif %}
+
+  {% if all_done %}
+  <script>
+    // 準備完了の紙吹雪 (動きを減らす設定の場合はCSS側で非表示)
+    (function () {
+      var colors = ["#2e7d9a", "#2e8b57", "#f2b134", "#c4553b", "#7a9e2e"];
+      for (var i = 0; i < 28; i++) {
+        var c = document.createElement("span");
+        c.className = "confetti";
+        c.style.left = Math.random() * 100 + "vw";
+        c.style.background = colors[i % colors.length];
+        c.style.animationDuration = (2 + Math.random() * 2) + "s";
+        c.style.animationDelay = (Math.random() * 0.8) + "s";
+        document.body.appendChild(c);
+        setTimeout(function (el) { return function () { el.remove(); }; }(c), 5200);
+      }
+    })();
+  </script>
   {% endif %}
 </body>
 </html>
